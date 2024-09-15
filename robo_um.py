@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+import pandas as pd
 import time
 
 path_chromedriver = 'C:\\Users\\DavidWillian\\Desktop\\Robos\\chromedriver.exe'
@@ -10,10 +11,12 @@ url_site = 'https://registro.br/'
 service = Service(executable_path=path_chromedriver) # Definindo o serviço do ChromeDriver
 driver = webdriver.Chrome(service=service)
 
-print('Acessando site')
-driver.get(url_site)
+df_workbook = pd.read_excel('dominio.xlsx') # Lendo excel
+dominios = df_workbook.values.flatten().tolist()
 
-dominios = ['testando_robo.com.br', 'uol.com.br', 'abcbolinhas.com.br']
+driver.get(url_site)
+print('Fazendo pesquisa dos dominios')
+
 resultados = []
 for dominio in dominios:
     campo_pesquisa = driver.find_element(By.ID, 'is-avail-field')
@@ -22,15 +25,17 @@ for dominio in dominios:
     campo_pesquisa.send_keys(dominio)
     time.sleep(1)
     campo_pesquisa.send_keys(Keys.ENTER)
-    print('Pesquisa efetuada!')
 
     time.sleep(2)
     resultado = driver.find_elements(By.XPATH, '//*[@id="conteudo"]/div/section/div[2]/div/p/span/strong')
     if resultado:
         print('Dominio: ' + dominio + ' ' +  resultado[0].text)
     else:
-        print('Não foi encontrado seletor do resultado, validar! \n')
+        ValueError('Não foi encontrado seletor do resultado, validar!')
     resultados.append(resultado[0].text)
 
-print('Todas urls pesquisadas!' + '\nResultado: ' + ' '.join(resultados))
+nome_arquivo = 'resultados.txt'
+with open(nome_arquivo, 'w') as arquivo:
+    arquivo.write('\n'.join(resultados))
+
 driver.quit()
